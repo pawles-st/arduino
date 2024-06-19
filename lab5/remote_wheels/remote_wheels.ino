@@ -46,7 +46,7 @@ void setup() {
 
   // setup LCD
 
-  lcd.init();
+  //lcd.init();
 
   // setup remote
 
@@ -67,13 +67,14 @@ void loop() {
   w.monitorDistance(distance_travelled);
 
   // print info on LCD
-
+/*
   if (curr_time - prev_print_time > LCD_DELAY) {
     prev_print_time = curr_time;
     lcd.clear();
     lcd.update_animation(w.right_state, w.left_state);
     lcd.print_movement_info(w.distance_left, w.right_state, w.left_state);
   }
+*/
 
   // parse commands
 

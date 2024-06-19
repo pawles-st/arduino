@@ -31,8 +31,8 @@ void setup() {
 
   serwo.attach(SERVO);
 
-  lcd.init();
-  lcd.backlight();
+  //lcd.init();
+  //lcd.backlight();
   
 /* patrz przed siebie */
   delay(1000);
@@ -42,10 +42,11 @@ void setup() {
 
   w.attach(7,8,5,12,11,10);
   w.setSpeed(100);
-  w.forward();
+  //w.forward();
 }
 
 void loop() {
+  Serial.println("test");
   while (true) {
     unsigned long curr_time = millis();
     if (curr_time - prev_time > sonar_delay) {
@@ -55,8 +56,6 @@ void loop() {
       if (distance < 100) {
         w.stop();
       }
-    } else if (curr_time - start_time > 2000) {
-      break;
     }
   }
   /* rozejrzyj się w zakresie od 0 stopni (patrz na jedną burtę)

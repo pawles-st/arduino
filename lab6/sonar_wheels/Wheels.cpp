@@ -2,6 +2,9 @@
 
 #include "Wheels.h"
 
+#define SPEED_LEFT 158
+#define SPEED_RIGHT 140
+
 #define SET_MOVEMENT(side,f,b) digitalWrite( side[0], f);\
                                digitalWrite( side[1], b)
 
@@ -52,8 +55,7 @@ void Wheels::attach(int pRF, int pRB, int pRS, int pLF, int pLB, int pLS)
 
 void Wheels::forwardLeft() 
 {
-    this->setSpeedRight(165);
-    this->setSpeedLeft(120);
+    this->setSpeedLeft(SPEED_LEFT);
     SET_MOVEMENT(pinsLeft, HIGH, LOW);
     this->distance_left = 0;
     this->left_state = EngineState::FORWARD;
@@ -61,8 +63,7 @@ void Wheels::forwardLeft()
 
 void Wheels::forwardRight() 
 {
-    this->setSpeedRight(165);
-    this->setSpeedLeft(120);
+    this->setSpeedRight(SPEED_RIGHT);
     SET_MOVEMENT(pinsRight, HIGH, LOW);
     this->distance_left = 0;
     this->right_state = EngineState::FORWARD;
@@ -70,8 +71,7 @@ void Wheels::forwardRight()
 
 void Wheels::backLeft()
 {
-    this->setSpeedRight(165);
-    this->setSpeedLeft(120);
+    this->setSpeedLeft(SPEED_LEFT);
     SET_MOVEMENT(pinsLeft, LOW, HIGH);
     this->distance_left = 0;
     this->left_state = EngineState::BACKWARD;
@@ -79,8 +79,7 @@ void Wheels::backLeft()
 
 void Wheels::backRight()
 {
-    this->setSpeedRight(165);
-    this->setSpeedLeft(120);
+    this->setSpeedRight(SPEED_RIGHT);
     SET_MOVEMENT(pinsRight, LOW, HIGH);
     this->distance_left = 0;
     this->right_state = EngineState::BACKWARD;
@@ -131,6 +130,7 @@ void Wheels::goBack(uint8_t cm) {
 }
 
 void Wheels::turnLeft() {
+  Serial.println("turn left");
   this->backLeft();
   this->forwardRight();
   this->setSpeedLeft(160);
@@ -138,6 +138,7 @@ void Wheels::turnLeft() {
 }
 
 void Wheels::turnRight() {
+  Serial.println("turn right");
   this->forwardLeft();
   this->backRight();
   this->setSpeedLeft(160);

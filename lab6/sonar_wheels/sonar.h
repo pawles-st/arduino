@@ -13,16 +13,27 @@ enum Collision {
   WARNING,
 };
 
+enum TurnDirection {
+  LEFT,
+  UP_LEFT,
+  UP_RIGHT,
+  RIGHT,
+  BACK,
+};
+
 class Sonar {
   public:
     Sonar();
-    Collision look();
-    void pick_direction();
+    void init();
+    Collision look(byte angle);
+    TurnDirection pick_direction();
+    void write(byte angle);
     bool is_blocked; // is blocked by an obstacle in front
   private:
     Servo servo;
+    int find_min(int a, int b, int c, int d);
     bool waiting; // is waiting for decision confirmation
-    unsigned int tell_distance(byte angle);
+    unsigned int tell_distance(byte angle, int d);
 };
 
 #endif

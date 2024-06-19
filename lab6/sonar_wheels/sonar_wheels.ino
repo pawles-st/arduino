@@ -27,12 +27,19 @@ unsigned long prev_command_time; // previous command read time
 
 Sonar sonar; // sonar controller object
 unsigned long prev_sonar_time; // previous sonar monitor time
-#define SONAR_DELAY 100 // delay between consecutive sonar reads
+TurnDirection turn_direction;
+byte angle_ctr = 0;
+byte current_angle = 90;
+#define SONAR_DELAY 500 // delay between consecutive sonar reads
 
 ///// universal timing variables /////
 
 unsigned long prev_time; // time measured in the previous loop
 unsigned long curr_time; // time measured in the current loop
+
+///// behavioural variables /////
+
+bool autonomous = false;
 
 ///// initialisation /////
 
@@ -48,7 +55,7 @@ void setup() {
   
   // attaching wheel pins
 
-  w.attach(7,8,5,12,11,10);
+  w.attach(4,7,5,9,8,6);
 
   // setup LCD
 
@@ -57,6 +64,10 @@ void setup() {
   // setup remote
 
   remote_control.init();
+
+  // setup sonar
+
+  sonar.init();
 }
 
 ///// main program loop /////
@@ -84,24 +95,72 @@ void loop() {
   // parse commands
 
   if (curr_time - prev_command_time > COMMAND_DELAY) {
-    prev_command_time = curr_time;
-    switch (remote_control.parse_command()) {
-      case Command::COMMAND_UP: w.forward(); break;
-      case Command::COMMAND_LEFT: w.turnLeft(); break;
-      case Command::COMMAND_RIGHT: w.turnRight(); break;
-      case Command::COMMAND_DOWN: w.back(); break;
-      case Command::COMMAND_OK: break;
-      default: w.stop();
+    Command command = remote_control.parse_command();
+    if (command == Command::COMMAND_OK) {
+      autonomous = !autonomous;
+    }
+    if (sonar.is_blocked) {
+      Serial.println(turn_direction);
+      if (turn_direction == TurnDirection::RIGHT) {
+        w.turnRight();
+        delay(600);
+        w.stop();
+      } else if (turn_direction == TurnDirection::UP_RIGHT) {
+        w.turnRight();
+        delay(300);
+        w.stop();
+      } else if (turn_direction == TurnDirection::UP_LEFT) {
+        w.turnLeft();
+        delay(300);
+        w.stop();
+      } else if (turn_direction == TurnDirection::LEFT) {
+        w.turnLeft();
+        delay(600);
+        w.stop();
+      } else if (turn_direction == TurnDirection::BACK) {
+        w.back();
+        delay(1000);
+        w.turnLeft();
+        delay(1000);
+        w.stop();
+      }
+      sonar.is_blocked = false;
+    } else {
+      prev_command_time = curr_time;
+      switch (command) {
+        case Command::COMMAND_UP: w.forward(); break;
+        case Command::COMMAND_LEFT: w.turnLeft(); break;
+        case Command::COMMAND_RIGHT: w.turnRight(); break;
+        case Command::COMMAND_DOWN: w.back(); break;
+        default: if (autonomous) {w.forward();} else {w.stop();}
+      }
     }
   }
 
   // monitor for obstacles
 
-  if (curr_time - prev_sonar_time > SONAR_DELAY) {
+  if (autonomous && curr_time - prev_sonar_time > SONAR_DELAY) {
     prev_sonar_time = curr_time;
-    switch (sonar.look()) {
+    switch (sonar.look(current_angle)) {
       case Collision::OK: break;
-      case Collision::WARNING: w.stop(); sonar.is_blocked = true; sonar.pick_direction(); break;
+      case Collision::WARNING: w.stop(); sonar.is_blocked = true; turn_direction = sonar.pick_direction(); break;
+    }
+
+    angle_ctr = (angle_ctr + 1) % 13;
+    switch (angle_ctr) {
+      case 0:
+      case 4:
+      case 8: current_angle = 90; break;
+      case 1:
+      case 5:
+      case 9: current_angle = 60; break;
+      case 2:
+      case 6:
+      case 10: current_angle = 120; break;
+      case 3: current_angle = 0; break;
+      case 11: current_angle = 180; break;
+      case 7: current_angle = 135; break;
+      case 12: current_angle = 45; break;
     }
   }
 

@@ -59,6 +59,7 @@ void setup() {
 ///// main program loop
 
 void loop() {
+  Serial.println("hello");
 
   // get current time
 
@@ -89,6 +90,8 @@ void loop() {
     }
   }
 
+  Serial.println("he");
+
   prev_time = curr_time;
 }
 
@@ -112,6 +115,7 @@ void monitor_distance() {
 } 
 
 void move() {
+  Serial.println("moving");
   switch (cmd) {
     case 'w': w.forward(); break;
     case 'x': w.back(); break;
