@@ -12,23 +12,35 @@ void Sonar::init() {
   servo.attach(SERVO);
 }
 
-Collision Sonar::look(byte angle) {
-  Serial.println(angle);
-  unsigned int distance = this->tell_distance(angle, 50);
-  /*if (distance < 25) {
-    return Collision::WARNING;
-  }
-  distance = this->tell_distance(75, 100);
-  if (distance < 25) {
-    return Collision::WARNING;
-  }
-  distance = this->tell_distance(105, 100);*/
+void Sonar::next_angle() {
+  angle_ctr = (angle_ctr + 1) % 13;
+    switch (angle_ctr) {
+      case 0:
+      case 4:
+      case 8: current_angle = 90; break;
+      case 1:
+      case 5:
+      case 9: current_angle = 60; break;
+      case 2:
+      case 6:
+      case 10: current_angle = 120; break;
+      case 3: current_angle = 0; break;
+      case 11: current_angle = 180; break;
+      case 7: current_angle = 135; break;
+      case 12: current_angle = 45; break;
+    }
+}
+
+Collision Sonar::look() {
+  unsigned int distance = this->tell_distance(current_angle, 50);
   byte allowed_distance = 50;
-  if (abs(angle - 90) >= 45) {
+  if (abs(current_angle - 90) >= 45) {
     allowed_distance = 20;
   }
 
   if (distance < allowed_distance) {
+    //Serial.print("WARNING AT ANGLE ");
+    //Serial.println(current_angle);
     return Collision::WARNING;
   } else {
     return Collision::OK;
@@ -40,6 +52,8 @@ void Sonar::write(byte angle) {
 }
 
 unsigned int Sonar::tell_distance(byte angle, int d) {
+  //Serial.print("looking at angle ");
+  //Serial.println(angle);
   servo.write(angle);
 
   digitalWrite(TRIG, HIGH);

@@ -28,6 +28,8 @@ enum Command {
   COMMAND_LEFT,
   COMMAND_RIGHT,
   COMMAND_DOWN,
+  COMMAND_FORWARD,
+  COMMAND_BACKWARD,
   COMMAND_OK,
   COMMAND_NULL,
 };
@@ -37,8 +39,6 @@ class Remote {
     Remote();
     init();
     Command parse_command();
-  private:
-    int command;
 };
 
 #endif

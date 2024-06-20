@@ -25,14 +25,15 @@ class Sonar {
   public:
     Sonar();
     void init();
-    Collision look(byte angle);
+    void next_angle();
+    Collision look();
     TurnDirection pick_direction();
     void write(byte angle);
     bool is_blocked; // is blocked by an obstacle in front
+    byte current_angle = 90;
   private:
     Servo servo;
-    int find_min(int a, int b, int c, int d);
-    bool waiting; // is waiting for decision confirmation
+    byte angle_ctr = 0;
     unsigned int tell_distance(byte angle, int d);
 };
 

@@ -10,6 +10,7 @@ Wheels w; // car movement controller object
 int distance_to_travel; // expected distance to travel for a goForward/goBackward command
 float distance_travelled; // distance travelled during a time frame between loops
 #define CM_PER_MS 0.005 // centimeters travelled by the car in a millisecond
+int distance = 0;
 
 ///// LCD DECLARATION /////
 
@@ -28,8 +29,6 @@ unsigned long prev_command_time; // previous command read time
 Sonar sonar; // sonar controller object
 unsigned long prev_sonar_time; // previous sonar monitor time
 TurnDirection turn_direction;
-byte angle_ctr = 0;
-byte current_angle = 90;
 #define SONAR_DELAY 500 // delay between consecutive sonar reads
 
 ///// universal timing variables /////
@@ -73,6 +72,7 @@ void setup() {
 ///// main program loop /////
 
 void loop() {
+  //Serial.println(autonomous);
 
   // get current time
 
@@ -95,73 +95,71 @@ void loop() {
   // parse commands
 
   if (curr_time - prev_command_time > COMMAND_DELAY) {
+    prev_command_time = curr_time;
+
     Command command = remote_control.parse_command();
+
     if (command == Command::COMMAND_OK) {
+      if (autonomous) {
+        sonar.current_angle = 90;
+      }
       autonomous = !autonomous;
     }
-    if (sonar.is_blocked) {
-      Serial.println(turn_direction);
-      if (turn_direction == TurnDirection::RIGHT) {
-        w.turnRight();
-        delay(600);
-        w.stop();
-      } else if (turn_direction == TurnDirection::UP_RIGHT) {
-        w.turnRight();
-        delay(300);
-        w.stop();
-      } else if (turn_direction == TurnDirection::UP_LEFT) {
-        w.turnLeft();
-        delay(300);
-        w.stop();
-      } else if (turn_direction == TurnDirection::LEFT) {
-        w.turnLeft();
-        delay(600);
-        w.stop();
-      } else if (turn_direction == TurnDirection::BACK) {
-        w.back();
-        delay(1000);
-        w.turnLeft();
-        delay(1000);
-        w.stop();
-      }
-      sonar.is_blocked = false;
-    } else {
-      prev_command_time = curr_time;
-      switch (command) {
-        case Command::COMMAND_UP: w.forward(); break;
+  
+    if (!autonomous) {
+        switch (command) {
+        case Command::COMMAND_UP: if (!sonar.is_blocked) {w.forward();} break;
         case Command::COMMAND_LEFT: w.turnLeft(); break;
         case Command::COMMAND_RIGHT: w.turnRight(); break;
         case Command::COMMAND_DOWN: w.back(); break;
-        default: if (autonomous) {w.forward();} else {w.stop();}
+        case Command::COMMAND_FORWARD: distance = Serial.parseInt(); w.goForward(distance); break;
+        case Command::COMMAND_BACKWARD: distance = Serial.parseInt(); w.goBack(distance); break;
+        default: w.stop();
       }
+    } else {
+      w.forward();
     }
   }
 
   // monitor for obstacles
 
-  if (autonomous && curr_time - prev_sonar_time > SONAR_DELAY) {
+  if (curr_time - prev_sonar_time > SONAR_DELAY) {
     prev_sonar_time = curr_time;
-    switch (sonar.look(current_angle)) {
-      case Collision::OK: break;
-      case Collision::WARNING: w.stop(); sonar.is_blocked = true; turn_direction = sonar.pick_direction(); break;
+    
+    // look for obstacle at current angle
+
+    //Serial.println("looking...");
+    switch (sonar.look()) {
+      case Collision::OK: sonar.is_blocked = false; break;
+      case Collision::WARNING: w.stop(); sonar.is_blocked = true; break;
     }
 
-    angle_ctr = (angle_ctr + 1) % 13;
-    switch (angle_ctr) {
-      case 0:
-      case 4:
-      case 8: current_angle = 90; break;
-      case 1:
-      case 5:
-      case 9: current_angle = 60; break;
-      case 2:
-      case 6:
-      case 10: current_angle = 120; break;
-      case 3: current_angle = 0; break;
-      case 11: current_angle = 180; break;
-      case 7: current_angle = 135; break;
-      case 12: current_angle = 45; break;
+    // update next looking angle (only if autonomous, otherwise keep looking in front)
+
+    if (autonomous) {
+      //Serial.println("next angle...");
+      sonar.next_angle();
     }
+  }
+
+  // handle obstacle avoidance
+
+  if (autonomous && sonar.is_blocked) {
+
+    // pick an optimal direction and turn
+
+    turn_direction = sonar.pick_direction();
+    switch (turn_direction) {
+      case TurnDirection::RIGHT: w.turnRight(); delay(600); w.stop(); break;
+      case TurnDirection::UP_RIGHT: w.turnRight(); delay(300); w.stop(); break;
+      case TurnDirection::UP_LEFT: w.turnLeft(); delay(300); w.stop(); break;
+      case TurnDirection::LEFT: w.turnLeft(); delay(600); w.stop(); break;
+      case TurnDirection::BACK: w.back(); delay(1000); w.turnLeft(); delay(1000); w.stop(); break;
+    }
+
+    // remove the movement blockade
+
+    sonar.is_blocked = false;
   }
 
   prev_time = curr_time;

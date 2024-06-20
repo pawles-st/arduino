@@ -121,12 +121,14 @@ void Wheels::goForward(uint8_t cm) {
     this->forward();
     this->setSpeed(100);
     this->distance_left = cm;
+    this->is_travelling = true;
 }
 
 void Wheels::goBack(uint8_t cm) {
     this->back();
     this->setSpeed(100);
     this->distance_left = cm;
+    this->is_travelling = true;
 }
 
 void Wheels::turnLeft() {
@@ -147,6 +149,8 @@ void Wheels::turnRight() {
 
 void Wheels::monitorDistance(float distance_travelled) {
   if (this->is_travelling == true) {
+    Serial.print("distance left = ");
+    Serial.println(this->distance_left);
 
     // update current distance
 
